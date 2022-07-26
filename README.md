@@ -1,2 +1,2 @@
 # haystackParser
-a modern parser for Haystack file 
+A modern parser for Haystack file 
