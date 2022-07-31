@@ -1,0 +1,45 @@
+start           :  _NEWLINE* trio 
+
+trio            : first_entity entity*
+
+first_entity    : (_small_stmt)+
+entity          : _ENTITY_MARK _NEWLINE (_small_stmt)+
+
+_small_stmt     : marker _NEWLINE
+                | tag _NEWLINE
+                | tag_multiline _DEDENT
+                 
+                
+
+_ENTITY_MARK    :  "-"+
+marker          : ID 
+                | ID ":" _MARKER
+
+tag             : ID ":" scalar
+tag_multiline   : ID ":"  _NEWLINE [_INDENT multiline_string+ ]
+ 
+
+
+COMMENT: /\/\/[^\n]*/
+//NAME: /[^\W\d]\w*/
+//safe_string: /[^\W\d]\w*/
+//string: /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i
+multiline_string: /[^\n]+/ _NEWLINE
+// number: NUMBER
+// time: TIME
+// date: DATE
+// date_time: DATE_TIME
+_NEWLINE: ( /\r?\n[\t ]*/ | COMMENT )+
+
+%ignore /[\t \f]+/  // WS
+%ignore /\\[\t \f]*\r?\n/   // LINE_CONT
+%ignore COMMENT
+%declare _INDENT _DEDENT
+
+%import .zinctype.scalar 
+%import .zinctype.ID
+%import .zinctype.ALPHA
+%import .zinctype.DIGIT
+%import .zinctype.STR
+%import .zinctype.MARKER -> _MARKER
+ 

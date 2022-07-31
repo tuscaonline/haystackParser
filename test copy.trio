@@ -1,0 +1,20 @@
+dis1 : "description aze"
+dis: UneDisSagejh
+--
+test: azea
+-
+entit:    3
+nombre: 30.2
+// Test
+nombreUnit: 12m²
+nombreUnitFloat: 12.0m²
+summary:
+    tets
+    blablb
+marqueur
+marque: M
+marque2: "M"
+val:Zinc:
+  ver:"3.0"
+  b,a
+  20,10

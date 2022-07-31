@@ -1,0 +1,70 @@
+ID.1      : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_"  )*
+
+?scalar : NULL
+        | REMOVE
+        | NA
+        | BOOL
+        | REF
+        | SYMBOL
+        | STR
+        | URI
+        | NUMBER
+        | DATE
+        | TIME
+        | DATETIME
+        | coord
+        | XSTR
+
+
+
+
+NULL    : "N"
+MARKER.2  : "M"
+REMOVE  : "R"
+NA      : "NA"
+BOOL  : "T" | "F"
+
+
+
+
+SYMBOL      : "^" REF_CHAR+
+REF         : "@" REF_CHAR+ [" " STR]  
+REF_CHAR    : ALPHA | DIGIT | "_" | ":" | "-" | "." | "~"
+
+STR         : "\"" STR_CHAR* "\""
+URI         : "`" URI_CHAR* "`"
+
+STR_CHAR    : /[^\n]/
+URI_CHAR    : /[^\n]/
+
+
+XSTR        : XSTR_TYPE "(" STR ")"
+XSTR_TYPE   : ALPHA_HI (ALPHA_LO | ALPHA_HI | DIGIT | "_")*
+
+NUMBER      : DECIMAL | "INF" | "-INF" | "NaN"
+DECIMAL     : ["-"] DIGITS ["." DIGITS] [EXP] [UNIT]
+EXP         : ("e" | "E") ["+"|"-"] DIGITS
+UNIT        : UNIT_CHAR*
+UNIT_CHAR   : ALPHA | "%" | "_" | "\/" | "$" | /[^\x00-\x7F]/
+
+DATE.2      : /\d{4}\-\d{2}\-\d{2}/
+TIME.2      : /\d{2}:\d{2}:\d{2}/ "."? DIGIT*
+
+DATETIME.3 : DATE "T" TIME TIMEZONE
+TIMEZONE    : "Z" | "Z UTC" |  (OFFSET " " (GMT| TIMEZONE_NAME))
+
+GMT         : "GMT"("+" | "-") DIGITS
+OFFSET      : ("+" | "-") DIGITS ":" DIGITS
+TIMEZONE_NAME    : (ALPHA | "_")+
+
+coord       : "C(" COORD_DEG ","  COORD_DEG ")"
+COORD_DEG   : "-"? DIGITS ["." DIGITS] 
+
+ALPHA_LO    :   /[a-z]/
+ALPHA_HI    :   /[A-Z]/
+ALPHA       :   ALPHA_LO | ALPHA_HI
+DIGIT       : /[0-9]/
+DIGITS      : DIGIT (DIGIT | "_")*
+HEX_DIGIT   : /[a-fA-F]/ | DIGIT
+
+

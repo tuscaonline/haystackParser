@@ -1,0 +1,37 @@
+marqueurA
+marqueurB:M
+test:"aqza &"é"fqsd "
+url:`https:\\www.google.fr`
+testRemove:R
+testNA:NA
+testBoolTrue:T
+testBoolFalse:F
+symbol: ^aze
+null: N
+nombre:1
+nombre2:12.3
+area: 3702ft²
+expo: 5.4E+8
+date: 2022-12-31
+time: 12:32:12.321
+numNAN: NaN
+numINF: INF
+numINFNeg: -INF
+
+dateTime: 2010-01-08T05:00:00Z
+dateTime: 2010-01-08T05:00:00Z UTC
+dateTime: 2010-11-28T12:22:27-03:00 GMT+3
+dateTime: 2010-11-28T12:22:27+03:00 GMT-3
+dateTime: 2010-11-28T23:19:29.741+08:00 Taipei 
+dateTime: 2010-11-28T07:23:02.773-08:00 Los_Angeles 
+geoCoord: C(37.5458,-77.4491)
+xstr: Type("value")
+---
+id:"eeaz"
+summary:
+    Test de vchaine
+    Test de vchaine 2
+    Test de vchaine 2s
+test
+soaceref:@trez "azer"
+

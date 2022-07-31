@@ -1,0 +1,55 @@
+start: (_WS* _NL)? trio
+
+trio: (entite)+
+
+entite: (_ENTITE )? ( key_marker 
+                        | tag_multiline 
+                        | tag)+
+
+//valeur: escaped_key | TRIO_SAFE_STRING
+
+_key: val_signed_number
+        | val_signed_number_units
+        | val_escaped_str
+        | val_trio_safe_string
+                
+
+val_signed_number_units: SIGNED_NUMBER /[^\n]+/
+val_trio_safe_string: TRIO_SAFE_STRING
+val_escaped_str: ESCAPED_STRING
+val_signed_number: SIGNED_NUMBER 
+val_number: INT
+key_marker: (NAME _NL) | (NAME  "M" _NL) | (NAME  "\"M\"" _NL) 
+
+
+tag: NAME  _key _WS* _NL
+
+
+tag_multiline: NAME _NL multiline*
+
+multiline:  _TAB _WS* /[^\n]+/ _NL
+
+ZINC_NESTED: ":Zinc"
+
+_SEPARATOR: /: */
+_QUOTE: "\""
+
+ESCAPED_STRING: /\".*\"/ 
+COMMENTS: /\/\/[^\n]*/ _NL
+
+NAME: /\w+/ _SEPARATOR
+//TRIO_SAFE_STRING: /.+/
+TRIO_SAFE_STRING: /[^\n]+/
+_ENTITE: /^\-+/ _NL
+
+_TAB: / {2,}/ | /\t{2,}/
+
+%import common.NEWLINE -> _NL
+%import common.WS_INLINE -> _WS
+%import common.WORD
+%import common.SIGNED_NUMBER
+%import common.INT
+%import common.NUMBER
+%import common.WS 
+//%ignore WS_INLINE 
+%ignore COMMENTS
