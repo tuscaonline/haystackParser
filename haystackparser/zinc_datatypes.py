@@ -160,6 +160,10 @@ class XStr:
 
 class Tag:
     def __init__(self, name:str, val: any) -> None:
+        regexName = r'^(^[a-z][a-zA-Z0-9_]*)$'
+        test = re.match(regexName, name)
+        if(not test):
+            raise ZincFormatException(f'Tag name : {name} is malformed')
         self.name = name
         self.val = val
 

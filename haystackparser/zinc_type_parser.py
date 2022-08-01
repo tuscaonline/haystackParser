@@ -1,7 +1,6 @@
 import datetime
 from decimal import Decimal
 import re
-from zoneinfo import ZoneInfo
 
 from lark import Token
 

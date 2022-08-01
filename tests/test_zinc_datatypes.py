@@ -2,7 +2,7 @@ from decimal import Decimal
 import re
 import pytest
 from haystackparser.exception import ZincFormatException
-from haystackparser.zinc_datatypes import MARKER, Coords, Ref, Symbol, Unite, XStr, ZincNumber, toDms
+from haystackparser.zinc_datatypes import MARKER, NULL, Coords, Ref, Symbol, Tag, Unite, XStr, ZincNumber, toDms
 
 def test_Ref_1():
     ref = Ref('@est', 'Commentaire test')
@@ -95,3 +95,23 @@ def test_XStr():
     assert xstr.type == "Color"
     assert xstr.val == 'red' 
     assert xstr.__repr__() == 'Color("red")'
+
+def test_Tag():
+    tag = Tag('nOm2_1', NULL)
+    assert tag.name == 'nOm2_1'
+    assert tag.val == NULL
+
+def test_TagMalformed():
+    tag = 'NOm2_1'
+    with pytest.raises(ZincFormatException, match=f'Tag name : {tag} is malformed'):
+        tag = Tag(tag, NULL)
+
+def test_TagMalformed2():
+    tag = '!Om2_1'
+    with pytest.raises(ZincFormatException, match=f'Tag name : {tag} is malformed'):
+        tag = Tag(tag, NULL)
+
+def test_TagMalformed3():
+    tag = 'nOaém2_1'
+    with pytest.raises(ZincFormatException, match=f'Tag name : {tag} is malformed'):
+        tag = Tag(tag, NULL)
