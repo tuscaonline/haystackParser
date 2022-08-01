@@ -1,4 +1,4 @@
-start           :  _NEWLINE* trio 
+?start           :  _NEWLINE* trio 
 
 trio            : first_entity entity*
 

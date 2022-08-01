@@ -157,3 +157,46 @@ class XStr:
         return(
             f'{self.type}("{self.val}")'
         )
+
+class Tag:
+    def __init__(self, name:str, val: any) -> None:
+        self.name = name
+        self.val = val
+
+    def __repr__(self) -> str:
+        return(
+            f'{self.name} : {self.val}'
+        )
+    
+    def __rich_repr__(self):
+        yield self.name
+        yield 'valeur', self.val
+
+class Entity:
+    def __init__(self, val: list[Tag] ) -> None:
+        self.val = val
+
+    def __repr__(self) -> str:
+        chaine = 'Entity:\n'
+        for line in self.val:
+            chaine += f'{line}\n'
+        return(
+            chaine.strip()
+        )
+    def __rich_repr__(self):
+        yield  self.val
+
+class Ontology:
+    def __init__(self, val: list[Entity]) -> None:
+        self.val = val
+
+    def __repr__(self) -> str:
+        chaine = 'Ontology:\n'
+        for line in self.val:
+            chaine += f'{line}\n'
+        return(
+            chaine.strip()
+        )
+    
+    def __rich_repr__(self):
+        return self.val

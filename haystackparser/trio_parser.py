@@ -3,6 +3,7 @@ import logging
 from lark import Lark, logger, Transformer, v_args, Tree
 from lark.indenter import Indenter
 from importlib.resources import files, as_file
+from haystackparser.zinc_datatypes import MARKER, Entity, Ontology, Tag
 
 from haystackparser.zinc_type_parser import zincTokenParser
 from . import grammar
@@ -14,17 +15,10 @@ logger.setLevel(logging.DEBUG)
 class TreeToJson(Transformer):
 
     def tag(self, item):
-        tag={
-            'tag': zincTokenParser(item[0]),
-            'value': zincTokenParser(item[1])
-        }
- 
-        return tag
+        return Tag(zincTokenParser(item[0]), zincTokenParser(item[1]) )
 
     def marker(self, item):
-        return {
-            'marker': zincTokenParser(item[0])
-        }
+        return Tag(zincTokenParser(item[0]), MARKER)
 
     @v_args(tree=True)
     def tag_multiline(self, item):
@@ -34,11 +28,26 @@ class TreeToJson(Transformer):
             if(not tagName):
                 tagName = zincTokenParser(children)
                 continue
-            multistring += children.value.strip() + '\n'
-        return {
-            'tag': tagName,
-            'value': multistring
-        }
+            multistring += '\n'+children.value.strip()  
+        return Tag(
+            tagName, multistring.strip()
+        )
+    
+    @v_args(tree=True)
+    def entity(self, item):
+        return Entity(item.children)
+
+    @v_args(tree=True)
+    def first_entity(self, item):
+        return Entity(item.children)
+
+    @v_args(tree=True)
+    def first_entity(self, item):
+        return Entity(item.children)
+
+    @v_args(tree=True)
+    def trio(self, item):
+        return Ontology(item.children)
 
 class TreeIndenter(Indenter):
     NL_type = '_NEWLINE'
