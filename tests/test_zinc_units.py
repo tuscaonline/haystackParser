@@ -4,17 +4,19 @@ from haystackparser.exception import UnitNotFound
 
 def test_checkUnits():
     unit= getHaystackUnits('Af')
-    assert unit == ["afghani","AFN","Af"]
+    assert unit.get('canonical') == "afghani"
 
 
 def test_checkUnitsM3():
     unit= getHaystackUnits('µg/m³')
-    assert unit == ["micrograms_per_cubic_meter","µg/m³"]
+    assert unit.get('canonical') == "micrograms_per_cubic_meter"
 
 
 def test_checkUnitsNm():
     unit= getHaystackUnits('N/m')
-    assert unit == ["newtons_per_meter","N/m"]
+    assert unit.get('canonical') == "newtons_per_meter"
+    assert unit.get('alias') == ["N/m"]
+    assert unit.get('dimension') == ["kg1*sec-2"]
  
 def test_errorUnits():
     with pytest.raises(UnitNotFound, match='Unit Stroumph is not in haystack database'):

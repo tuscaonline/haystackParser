@@ -8,8 +8,8 @@ authors = ["tuscaonline <pierre.nerriere@engie.com>"]
 python = "^3.9"
 lark = "^1.1.2"
 Pint = "^0.19.2"
-iso8601 = "^1.0.2"
 tzdata = "^2022.1"
+python-dateutil = "^2.8.2"
 
 
 [tool.poetry.dev-dependencies]
