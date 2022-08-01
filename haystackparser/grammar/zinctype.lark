@@ -1,4 +1,4 @@
-ID.1      : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_"  )*
+NAME.1      : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_"  )*
 
 ?scalar : NULL
         | REMOVE
@@ -12,11 +12,13 @@ ID.1      : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_"  )*
         | DATE
         | TIME
         | DATETIME
-        | coord
+        | COORD
         | XSTR
 
-
-
+list    : "[" _tuple_inner "]"
+dict    : "{" _dict_inner+ "}"
+_tuple_inner: scalar (("," scalar)+ [","] | ",")
+_dict_inner: NAME ":" scalar [","]
 
 NULL    : "N"
 MARKER.2  : "M"
@@ -34,8 +36,8 @@ REF_CHAR    : ALPHA | DIGIT | "_" | ":" | "-" | "." | "~"
 STR         : "\"" STR_CHAR* "\""
 URI         : "`" URI_CHAR* "`"
 
-STR_CHAR    : /[^\n]/
-URI_CHAR    : /[^\n]/
+STR_CHAR    : /(?:[^"\\]|\\.)*/
+URI_CHAR    : /[^\n\"]/
 
 
 XSTR        : XSTR_TYPE "(" STR ")"
@@ -57,7 +59,7 @@ GMT         : "GMT"("+" | "-") DIGITS
 OFFSET      : ("+" | "-") DIGITS ":" DIGITS
 TIMEZONE_NAME    : (ALPHA | "_")+
 
-coord       : "C(" COORD_DEG ","  COORD_DEG ")"
+COORD       : "C(" COORD_DEG ","  COORD_DEG ")"
 COORD_DEG   : "-"? DIGITS ["." DIGITS] 
 
 ALPHA_LO    :   /[a-z]/

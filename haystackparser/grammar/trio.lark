@@ -8,15 +8,14 @@ entity          : _ENTITY_MARK _NEWLINE (_small_stmt)+
 _small_stmt     : marker _NEWLINE
                 | tag _NEWLINE
                 | tag_multiline _DEDENT
-                 
                 
 
 _ENTITY_MARK    :  "-"+
-marker          : ID 
-                | ID ":" _MARKER
+marker          : NAME 
+                | NAME ":" _MARKER
 
-tag             : ID ":" scalar
-tag_multiline   : ID ":"  _NEWLINE [_INDENT multiline_string+ ]
+tag             : NAME ":" ( scalar | list | dict )
+tag_multiline   : NAME ":"  _NEWLINE [_INDENT _multiline_string+ ]
  
 
 
@@ -24,7 +23,7 @@ COMMENT: /\/\/[^\n]*/
 //NAME: /[^\W\d]\w*/
 //safe_string: /[^\W\d]\w*/
 //string: /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i
-multiline_string: /[^\n]+/ _NEWLINE
+_multiline_string: /[^\n]+/ _NEWLINE
 // number: NUMBER
 // time: TIME
 // date: DATE
@@ -37,9 +36,7 @@ _NEWLINE: ( /\r?\n[\t ]*/ | COMMENT )+
 %declare _INDENT _DEDENT
 
 %import .zinctype.scalar 
-%import .zinctype.ID
-%import .zinctype.ALPHA
-%import .zinctype.DIGIT
-%import .zinctype.STR
+%import .zinctype.NAME
 %import .zinctype.MARKER -> _MARKER
- 
+%import .zinctype.list
+%import .zinctype.dict

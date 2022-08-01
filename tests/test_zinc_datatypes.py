@@ -1,7 +1,8 @@
+from decimal import Decimal
 import re
 import pytest
 from haystackparser.exception import ZincFormatException
-from haystackparser.zinc_datatypes import MARKER, Ref, Symbol, ZincNumber
+from haystackparser.zinc_datatypes import MARKER, Coords, Ref, Symbol, Unite, XStr, ZincNumber, toDms
 
 def test_Ref_1():
     ref = Ref('@est', 'Commentaire test')
@@ -54,12 +55,43 @@ def test_ZincNumber_1():
     ref = ZincNumber(12.34, "m²")
 
     assert ref.value == 12.34
-    assert ref.unit == ['square_meter','m²']
+    assert ref.unit.canonical == 'square_meter'
     assert ref.__repr__() == "12.34m²"
 
 def test_ZincNumber_2():
     ref = ZincNumber(12.34, "therm")
 
     assert ref.value == 12.34
-    assert ref.unit == ['therm']
+    assert ref.unit.canonical == 'therm'
     assert ref.__repr__() == "12.34therm"
+
+def test_Unite():
+    ref = Unite("m²")
+    assert ref.canonical == 'square_meter'
+    assert ref.alias == ['m²']
+    assert ref.getPrintUnit() == 'm²'
+
+def test_Coords():
+    coord = Coords('37.545827', '-77.449189' )
+    assert coord.lat == 37.545827
+    assert coord.lng == -77.449189
+    assert coord.__repr__() == """Latitude: 37° 32' 44.9772"N, Longitude: 77° 26' 57.0804"W"""
+
+def test_toDms():
+    coord = toDms(37.545827)
+    assert coord[0] == 37
+    assert coord[1] == 32
+    assert coord[2] == 44.977200000009816
+    
+
+def test_toDms2():
+    coord = toDms(-37.545827)
+    assert coord[0] == -37
+    assert coord[1] == 32
+    assert coord[2] == 44.977200000009816
+
+def test_XStr():
+    xstr = XStr("Color", 'red' )
+    assert xstr.type == "Color"
+    assert xstr.val == 'red' 
+    assert xstr.__repr__() == 'Color("red")'

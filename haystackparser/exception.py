@@ -8,3 +8,7 @@ class ZincFormatException(Exception):
 class UnitNotFound(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+class TimeZoneNotFound(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)

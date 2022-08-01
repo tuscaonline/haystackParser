@@ -1,7 +1,7 @@
 from datetime import datetime, date, time
 from haystackparser import zinc_type_parser
 from haystackparser.exception import UnitNotFound, ZincFormatException
-from haystackparser.zinc_datatypes import Ref, Symbol
+from haystackparser.zinc_datatypes import Coords, Ref, Symbol, XStr
 import pytest
 from zoneinfo import ZoneInfo
 
@@ -84,13 +84,14 @@ def test_zinctype__NUMBER_12_3E2():
 def test_zinctype__NUMBER_EGP():
     quantity = zinc_type_parser.zinctype__NUMBER("-12EGP")
     assert quantity.value == -12
-    assert quantity.unit == ['egyptian_pound', 'EGP']
+    assert quantity.unit.canonical == 'egyptian_pound'
+    assert quantity.__repr__() == '-12.00EGP'
 
 
 def test_zinctype__NUMBER_percent():
     quantity = zinc_type_parser.zinctype__NUMBER("-12%")
     assert quantity.value == -12
-    assert quantity.unit == ['percent', '%']
+    assert quantity.unit.canonical == 'percent'
 
 
 def test_zinctype__DATE():
@@ -111,11 +112,29 @@ def test_zinctype__DATETIME():
     assert _date == datetime(2010, 1, 8, 5, 0, 0,tzinfo= ZoneInfo('UTC'))
 
 def test_zinctype__DATETIMEUTC():
-    _date = zinc_type_parser.zinctype__DATETIME('2010-01-08T05:00:00Z UTC')
+    _date = zinc_type_parser.zinctype__DATETIME('2010-01-08T05:00:00Z')
     assert type(_date) == datetime
     assert _date == datetime(2010, 1, 8, 5, 0, 0,tzinfo= ZoneInfo('UTC'))
 
 def test_zinctype__DATETIMEGMT():
-    _date = zinc_type_parser.zinctype__DATETIME('2010-01-08T05:00:00+08:00 Taipei')
+    _date = zinc_type_parser.zinctype__DATETIME('2010-01-08T05:00:00.123+08:00')
     assert type(_date) == datetime
-    assert _date == datetime(2010, 1, 8, 5, 0, 0,tzinfo= ZoneInfo('Taipei'))
+    assert _date.isoformat() == '2010-01-08T05:00:00.123000+08:00'
+
+def test_zinctype__DATETIMENoumea():
+    _date = zinc_type_parser.zinctype__DATETIME('2010-01-08T05:00:00 Noumea')
+    assert type(_date) == datetime
+    assert _date == datetime(2010, 1, 8, 5, 0, 0,tzinfo= ZoneInfo('Pacific/Noumea'))
+
+
+def test_zinctype__COORD():
+    coord = zinc_type_parser.zinctype__COORD('C(37.5458,-77.4491)')
+    assert type(coord)==Coords
+    assert coord.lat == 37.5458
+    assert coord.lng == -77.4491
+
+def test_zinctype__XStr():
+    xstr = zinc_type_parser.zinctype__XStr('Color("red")')
+    assert type(xstr)==XStr
+    assert xstr.type == 'Color'
+    assert xstr.val  == 'red'

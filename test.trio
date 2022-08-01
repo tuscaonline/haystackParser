@@ -1,6 +1,6 @@
 marqueurA
 marqueurB:M
-test:"aqza &"é"fqsd "
+test:"aqza \"fqsd "
 url:`https:\\www.google.fr`
 testRemove:R
 testNA:NA

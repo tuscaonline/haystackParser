@@ -3,6 +3,8 @@ import logging
 from lark import Lark, logger, Transformer, v_args, Tree
 from lark.indenter import Indenter
 from importlib.resources import files, as_file
+
+from haystackparser.zinc_type_parser import zincTokenParser
 from . import grammar
 
 
@@ -10,22 +12,33 @@ logger.setLevel(logging.DEBUG)
 
 
 class TreeToJson(Transformer):
-    @v_args(inline=True)
-    def string(self, s):
-        return s[1:-1].replace('\\"', '"')
 
     def tag(self, item):
-        print(f'tag: {item}')
-        return item
+        tag={
+            'tag': zincTokenParser(item[0]),
+            'value': zincTokenParser(item[1])
+        }
+ 
+        return tag
 
     def marker(self, item):
-        print(f'marker: {item}')
-        return item
+        return {
+            'marker': zincTokenParser(item[0])
+        }
 
     @v_args(tree=True)
-    def tag_multiline(self, un):
-        print(f'tag_multiline: un: {un} ' )
-        return un
+    def tag_multiline(self, item):
+        multistring = ''
+        tagName = None
+        for children in item.children:
+            if(not tagName):
+                tagName = zincTokenParser(children)
+                continue
+            multistring += children.value.strip() + '\n'
+        return {
+            'tag': tagName,
+            'value': multistring
+        }
 
 class TreeIndenter(Indenter):
     NL_type = '_NEWLINE'
