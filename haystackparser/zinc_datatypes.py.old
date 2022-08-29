@@ -92,14 +92,20 @@ NULL = _NullType()
 
 class ZincNumber:
 
-    def __init__(self,  number: Decimal, unit) -> None:
+    def __init__(self,  number: Decimal, unit = None) -> None:
         self.value = Decimal(number)
-        _unit = getHaystackUnits(unit)
-        self.unit = Unite(unit)
+        self.unit = None
+        if(unit):
+            self.unit = Unit(unit)
 
         # self.quantiy = self.value * ureg(self.unit[0])
     def __repr__(self) -> str:
-        return f'{self.value:.2f}{self.unit.getPrintUnit()}'
+        if(self.unit):
+            return f'{self.value:.2f}{self.unit.getPrintUnit()}'
+        else:
+            return f'{self.value:.2f}'
+
+
 
 
 class Uri:
@@ -111,7 +117,7 @@ class Uri:
         return f'Url "{self.value}"'
 
 
-class Unite:
+class Unit:
     def __init__(self, unit: str) -> None:
         _unit = getHaystackUnits(unit)
         self.canonical = _unit.get('canonical')
@@ -158,49 +164,49 @@ class XStr:
             f'{self.type}("{self.val}")'
         )
 
-class Tag:
-    def __init__(self, name:str, val: any) -> None:
-        regexName = r'^(^[a-z][a-zA-Z0-9_]*)$'
-        test = re.match(regexName, name)
-        if(not test):
-            raise ZincFormatException(f'Tag name : {name} is malformed')
-        self.name = name
-        self.val = val
+# class Tag:
+#     def __init__(self, name:str, val: any) -> None:
+#         regexName = r'^(^[a-z][a-zA-Z0-9_]*)$'
+#         test = re.match(regexName, name)
+#         if(not test):
+#             raise ZincFormatException(f'Tag name : {name} is malformed')
+#         self.name = name
+#         self.val = val
 
-    def __repr__(self) -> str:
-        return(
-            f'{self.name} : {self.val}'
-        )
+#     def __repr__(self) -> str:
+#         return(
+#             f'{self.name} : {self.val}'
+#         )
     
-    def __rich_repr__(self):
-        yield self.name
-        yield 'valeur', self.val
+#     def __rich_repr__(self):
+#         yield self.name
+#         yield 'valeur', self.val
 
-class Entity:
-    def __init__(self, val: list[Tag] ) -> None:
-        self.val = val
+# class Entity:
+#     def __init__(self, val: list[Tag] ) -> None:
+#         self.val = val
 
-    def __repr__(self) -> str:
-        chaine = 'Entity:\n'
-        for line in self.val:
-            chaine += f'{line}\n'
-        return(
-            chaine.strip()
-        )
-    def __rich_repr__(self):
-        yield  self.val
+#     def __repr__(self) -> str:
+#         chaine = 'Entity:\n'
+#         for line in self.val:
+#             chaine += f'{line}\n'
+#         return(
+#             chaine.strip()
+#         )
+#     def __rich_repr__(self):
+#         yield  self.val
 
-class Ontology:
-    def __init__(self, val: list[Entity]) -> None:
-        self.val = val
+# class Ontology:
+#     def __init__(self, val: list[Entity]) -> None:
+#         self.val = val
 
-    def __repr__(self) -> str:
-        chaine = 'Ontology:\n'
-        for line in self.val:
-            chaine += f'{line}\n'
-        return(
-            chaine.strip()
-        )
+#     def __repr__(self) -> str:
+#         chaine = 'Ontology:\n'
+#         for line in self.val:
+#             chaine += f'{line}\n'
+#         return(
+#             chaine.strip()
+#         )
     
-    def __rich_repr__(self):
-        return self.val
+#     def __rich_repr__(self):
+#         return self.valg'

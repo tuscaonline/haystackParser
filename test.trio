@@ -19,7 +19,7 @@ numINF: INF
 numINFNeg: -INF
 test
 test
-
+-
 dateTime: 2010-01-08T05:00:00Z
 dateTime: 2010-01-08T05:00:00Z UTC
 dateTime: 2010-11-28T12:22:27-03:00 GMT+3
@@ -36,4 +36,4 @@ summary:
     Test de vchaine 2s
 test
 soaceref:@trez "azer"
-
+val:[1,2,3]
