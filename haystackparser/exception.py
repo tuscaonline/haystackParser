@@ -16,3 +16,7 @@ class TimeZoneNotFound(Exception):
 class RefNotFound(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+class EntityNotFound(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)

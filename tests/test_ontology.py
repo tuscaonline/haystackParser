@@ -1,6 +1,7 @@
 
 from linecache import lazycache
-from haystackparser.exception import RefNotFound
+from re import M
+from haystackparser.exception import EntityNotFound, RefNotFound
 from haystackparser.kinds import Number, Ref, Str
 from haystackparser.ontology import Entity, Ontology, Tag
 import pytest
@@ -25,28 +26,36 @@ import pytest
 #     myOntolgy.addEntity(myEntity2)
 #     return myOntolgy
 
-def test_create_tag():
-#     myNumberTag = Tag('nombre', Number(23.4))
-#     assert myNumberTag.value.value == 23.4
-#     myStrTag = Tag('chaine', Str('chaine un longue'))
-#     assert myStrTag.value.value == 'chaine un longue'
+def test_add_tag():
+    myOntology = Ontology()
+    myentie = Entity(Ref("@aze"))
+    myOntology.append(myentie)
+    with pytest.raises(TypeError):
+        myOntology.append("aze")
+    assert myOntology[0]== myentie
 
-#     myRefTag = Tag('reference', Ref("@refer.1"))
-#     assert myRefTag.value.value == "@refer.1"
+def test_get_tag_by_ref():
+    myOntology = Ontology()
+    myentie = Entity(Ref("@aze"))
+    myentie2 = Entity(Ref("@aze2"))
+    myOntology.append(myentie)
+    myOntology.append(myentie2)
+    assert myOntology[Ref("@aze2")] == myentie2
+    assert myOntology[Ref("@aze")] == myentie
 
-    myEntity = Entity(Ref('@entity1', "Essais"))
-    myEntity2 = Entity(Ref('@entity2', "Essais"))
-    myEntity3 = Entity(Ref('@entity3', "Essais"))
 
-    myOntology = Ontology([myEntity, myEntity2, myEntity3])
+def test_get_by_slice():
+    myOntology = Ontology()
+    myentie = Entity(Ref("@aze"))
+    myentie2 = Entity(Ref("@aze2"))
+    myentie3 = Entity(Ref("@aze3"))
+    myentie4 = Entity(Ref("@aze4"))
+    myOntology.append(myentie)
+    myOntology.append(myentie2)
+    myOntology.append(myentie3)
+    myOntology.append(myentie4)
 
-    assert myOntology[0] == myEntity
-    assert myOntology[1] == myEntity2
-    assert myOntology[2] == myEntity3
-    assert myOntology[0:2] == [myEntity, myEntity2]
-    assert myOntology[Ref('@entity3', "Essaais")] == myEntity3
-    with pytest.raises(RefNotFound, 
-        match='Reference @entite not found'):
-        myOntology[Ref('@entite', "Essaais")]
-
-    
+    newOntology = myOntology[3:4]
+    assert newOntology[0] == myentie4
+    with pytest.raises(EntityNotFound, match= f'Entity @aze not found' ):
+        test = newOntology[Ref("@aze")]

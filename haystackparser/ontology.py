@@ -2,10 +2,12 @@
 #
 
 import re
-from typing import MutableSequence, Union
+from collections.abc import MutableSequence
+from typing import List, Union
+from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 
-from haystackparser.exception import RefNotFound, ZincFormatException
+from haystackparser.exception import EntityNotFound, RefNotFound, ZincFormatException
 from haystackparser.kinds import Kind, Ref
 
 
@@ -65,138 +67,49 @@ class Entity:
 
 
 class Ontology(MutableSequence):
-    """A more or less complete user-defined wrapper around list objects."""
+    def __init__(self, initvalue=None) -> None:
+        self._data: List[Entity]= []
+        if initvalue is not None:
+            self._data = list(initvalue)
+        super().__init__()
+    
+    def insert(self, index: int, value: Entity) -> None:
+        raise NotImplementedError('insert')
+        return super().insert(index, value)
 
-    def __init__(self, initlist: list[Entity]=None):
-        self.data:list[Entity] = []
-        if initlist is not None:
-            # XXX should this accept an arbitrary sequence?
-            if type(initlist) == type(self.data):
-                self.data[:] = initlist
-            elif isinstance(initlist, Ontology):
-                self.data[:] = initlist.data[:]
-            else:
-                self.data = list(initlist)
+    def __getitem__(self, index: Union[int, Ref, slice]) :
+        if isinstance(index, int):
+            return self._data[index]
+        elif isinstance(index, Ref):
+            # issume one entity ref is unic
+            for data in self._data:
+                if data.id == index:
+                    return data
+            raise EntityNotFound(f'Entity {index.value} not found')
+        elif isinstance(index, slice):
+            return self.__class__(self._data[index])
+        raise NotImplementedError('__getitem__')
 
-    def __repr__(self):
-        return repr(self.data)
+    
 
-    def __lt__(self, other):
-        return self.data < self.__cast(other)
 
-    def __le__(self, other):
-        return self.data <= self.__cast(other)
+    def __setitem__(self, index: int, value: Entity) -> None:
+        raise NotImplementedError('__setitem__')
+    
+    def __setitem__(self, index: slice, value: list[Entity]) -> None: 
+        raise NotImplementedError('__setitem__')
+        
+    def __delitem__(self, index: int) -> None:
+        raise NotImplementedError('__delitem__')
 
-    def __eq__(self, other):
-        return self.data == self.__cast(other)
+    def __delitem__(self, index: slice) -> None: 
+        raise NotImplementedError('__delitem__')
 
-    def __gt__(self, other):
-        return self.data > self.__cast(other)
+    def __len__(self) -> int:
+        return super().__len__()
 
-    def __ge__(self, other):
-        return self.data >= self.__cast(other)
-
-    def __cast(self, other):
-        return other.data if isinstance(other, Ontology) else other
-
-    def __contains__(self, item):
-        return item in self.data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, key: Union[int, Ref, slice]):
-        if isinstance(key, slice):
-            return self.__class__(self.data[key])
-        elif isinstance(key, Ref):
-            filtered = list(filter(lambda entity: entity.id == key, self.data))
-            if len(filtered)==0:
-                raise RefNotFound(f'Reference {key.value} not found')
-            elif len(filtered) > 1:
-                raise RefNotFound(f'Reference {key.value} not unic in ontology')
-
-            return filtered[0]
- 
+    def append(self, value: Entity) -> None:
+        if isinstance(value, Entity):
+            self._data.append(value)
         else:
-            return self.data[key]
-
-    def __setitem__(self, i, item):
-        self.data[i] = item
-
-    def __delitem__(self, i):
-        del self.data[i]
-
-    def __add__(self, other):
-        if isinstance(other, Ontology):
-            return self.__class__(self.data + other.data)
-        elif isinstance(other, type(self.data)):
-            return self.__class__(self.data + other)
-        return self.__class__(self.data + list(other))
-
-    def __radd__(self, other):
-        if isinstance(other, Ontology):
-            return self.__class__(other.data + self.data)
-        elif isinstance(other, type(self.data)):
-            return self.__class__(other + self.data)
-        return self.__class__(list(other) + self.data)
-
-    def __iadd__(self, other):
-        if isinstance(other, Ontology):
-            self.data += other.data
-        elif isinstance(other, type(self.data)):
-            self.data += other
-        else:
-            self.data += list(other)
-        return self
-
-    def __mul__(self, n):
-        return self.__class__(self.data * n)
-
-    __rmul__ = __mul__
-
-    def __imul__(self, n):
-        self.data *= n
-        return self
-
-    def __copy__(self):
-        inst = self.__class__.__new__(self.__class__)
-        inst.__dict__.update(self.__dict__)
-        # Create a copy and avoid triggering descriptors
-        inst.__dict__["data"] = self.__dict__["data"][:]
-        return inst
-
-    def append(self, item):
-        self.data.append(item)
-
-    def insert(self, i, item):
-        self.data.insert(i, item)
-
-    def pop(self, i=-1):
-        return self.data.pop(i)
-
-    def remove(self, item):
-        self.data.remove(item)
-
-    def clear(self):
-        self.data.clear()
-
-    def copy(self):
-        return self.__class__(self)
-
-    def count(self, item):
-        return self.data.count(item)
-
-    def index(self, item, *args):
-        return self.data.index(item, *args)
-
-    def reverse(self):
-        self.data.reverse()
-
-    def sort(self, /, *args, **kwds):
-        self.data.sort(*args, **kwds)
-
-    def extend(self, other):
-        if isinstance(other, Ontology):
-            self.data.extend(other.data)
-        else:
-            self.data.extend(other)
+            raise TypeError()
