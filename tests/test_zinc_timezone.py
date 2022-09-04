@@ -1,7 +1,7 @@
 from zoneinfo import ZoneInfo
 import pytest
 from haystackparser.exception import TimeZoneNotFound
-from haystackparser.zinc_timezone import _loadTz, getHaystackTz
+from haystackparser.zinc_datetime import _loadTz, getHaystackTz
 
 
 def test_loadTzParis():

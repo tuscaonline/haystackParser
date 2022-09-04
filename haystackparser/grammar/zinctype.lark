@@ -1,65 +1,68 @@
-NAME.1      : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_"  )*
+NAME     : ALPHA_LO (ALPHA_LO|ALPHA_HI|DIGIT | "_" )*
 
 ?scalar : NULL
-        | REMOVE
+        | MARKER
         | NA
+        | REMOVE
         | BOOL
-        | REF
-        | SYMBOL
+        | NUMBER
         | STR
         | URI
-        | NUMBER
+        | REF
+        | SYMBOL
         | DATE
         | TIME
         | DATETIME
         | COORD
         | XSTR
+        | TRIO_UNQUOTED_STR
 
-list    : "[" _tuple_inner "]"
-dict    : "{" _dict_inner+ "}"
+list.7   : "[" _tuple_inner "]"
+dict.7   : "{" _dict_inner+ "}"
 _tuple_inner: scalar (("," scalar)+ [","] | ",")
-_dict_inner: NAME ":" scalar [","]
+_dict_inner: tag [","] " "*
 
-NULL    : "N"
-MARKER.2  : "M"
-REMOVE  : "R"
-NA      : "NA"
-BOOL  : "T" | "F"
+NULL.5    : "N"
+MARKER.5  : "M"
+REMOVE.5   : "R"
+NA.5       : "NA"
+BOOL.5  : "T" | "F"
 
+tag     : NAME " "* ":" " "* scalar " "* 
 
+TRIO_UNQUOTED_STR.0: /[^\r\n]+/  
 
+SYMBOL.5       : "^" REF_CHAR+
+REF.5        : "@" REF_CHAR+ [" " STR]  
+REF_CHAR     : ALPHA | DIGIT | "_" | ":" | "-" | "." | "~"
 
-SYMBOL      : "^" REF_CHAR+
-REF         : "@" REF_CHAR+ [" " STR]  
-REF_CHAR    : ALPHA | DIGIT | "_" | ":" | "-" | "." | "~"
-
-STR         : "\"" STR_CHAR* "\""
-URI         : "`" URI_CHAR* "`"
+STR.5          : "\"" STR_CHAR* "\""
+URI.5         : "`" URI_CHAR* "`"
 
 STR_CHAR    : /(?:[^"\\]|\\.)*/
 URI_CHAR    : /[^\n\"]/
 
 
-XSTR        : XSTR_TYPE "(" STR ")"
+XSTR.5         : XSTR_TYPE "(" STR ")"
 XSTR_TYPE   : ALPHA_HI (ALPHA_LO | ALPHA_HI | DIGIT | "_")*
 
-NUMBER      : DECIMAL | "INF" | "-INF" | "NaN"
+NUMBER.5       : DECIMAL | "INF" | "-INF" | "NaN"
 DECIMAL     : ["-"] DIGITS ["." DIGITS] [EXP] [UNIT]
 EXP         : ("e" | "E") ["+"|"-"] DIGITS
 UNIT        : UNIT_CHAR*
-UNIT_CHAR   : ALPHA | "%" | "_" | "\/" | "$" | /[^\x00-\x7F]/
+UNIT_CHAR   : ALPHA | DIGIT  | "%" | "_" | "\/" | "$" | /[^\x00-\x7F]/
 
-DATE.2      : /\d{4}\-\d{2}\-\d{2}/
-TIME.2      : /\d{2}:\d{2}:\d{2}/ "."? DIGIT*
+DATE.5       : /\d{4}\-\d{2}\-\d{2}/
+TIME.5       : /\d{2}:\d{2}:\d{2}/ "."? DIGIT*
 
-DATETIME.3 : DATE "T" TIME TIMEZONE
+DATETIME.6  : DATE "T" TIME TIMEZONE
 TIMEZONE    : "Z" | "Z UTC" |  (OFFSET " " (GMT| TIMEZONE_NAME))
 
 GMT         : "GMT"("+" | "-") DIGITS
 OFFSET      : ("+" | "-") DIGITS ":" DIGITS
 TIMEZONE_NAME    : (ALPHA | "_")+
 
-COORD       : "C(" COORD_DEG ","  COORD_DEG ")"
+COORD.5       : "C(" COORD_DEG ","  COORD_DEG ")"
 COORD_DEG   : "-"? DIGITS ["." DIGITS] 
 
 ALPHA_LO    :   /[a-z]/

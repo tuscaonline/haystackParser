@@ -102,5 +102,15 @@ class Unit:
         """Get alias of the unit"""
         return self._unit['alias']
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            myAlias = self._unit['alias'] + [self._unit['dimension']]
+            if other in myAlias:
+                return True
+            else:
+                return False
+        return super().__eq__(other)
+
+
     def __repr__(self) -> str:
         return f"Dimension : {self.dimension} ; Original Symbol : {self.symbol} ; Canonical: {self.canonical}"
