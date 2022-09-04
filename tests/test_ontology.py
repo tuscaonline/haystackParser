@@ -209,4 +209,47 @@ class Test_Tag:
         assert myTag.name == 'test'
         assert myTag() == 34.3
         assert myTag.kind == 34.3
- 
+
+
+class Test_TrioDumper:
+    def test_one_entity(self):
+
+        entity1 = Entity(Ref('@entity1', "Entity  name"), [
+            Tag('number1', Number(43.0)),
+            Tag('str1', Str('String 1'))
+        ]
+        )
+        myOntology = Ontology([entity1])
+        trioStr = myOntology.trio_dumper()
+
+        trioExpect = """id:@entity1 "Entity  name"
+number1:43.0
+str1:"String 1"
+"""
+        assert trioStr == trioExpect
+
+
+    def test_two_entity(self):
+
+        entity1 = Entity(Ref('@entity1', "Entity  name"), [
+            Tag('number1', Number(43.0)),
+            Tag('str1', Str('String 1'))
+        ]
+        )
+        entity2 = Entity(Ref('@entity2', "Entity  name"), [
+            Tag('number1', Number(43.0)),
+            Tag('str1', Str('String 2'))
+        ]
+        )
+        myOntology = Ontology([entity1, entity2])
+        trioStr = myOntology.trio_dumper()
+
+        trioExpect = """id:@entity1 "Entity  name"
+number1:43.0
+str1:"String 1"
+---
+id:@entity2 "Entity  name"
+number1:43.0
+str1:"String 2"
+"""
+        assert trioStr == trioExpect

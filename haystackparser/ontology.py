@@ -39,6 +39,8 @@ class Tag:
     def __call__(self) -> Kinds:
         return self.kind
 
+    def trio_dumper(self) -> str:
+        return f'{self.name}:{self.kind.toZinc}'
 
 class Entity(MutableSequence):
     def __init__(self, id: Ref = None, initValue: List[Tag] = None) -> None:
@@ -126,10 +128,16 @@ class Entity(MutableSequence):
     def append(self, value: Tag) -> None:
         self._addTag(value)
 
+    def trio_dumper(self) -> str:
+        trioStr= ''
+        trioStr += f'id:{self.id.toZinc}\n'
+        for tag in self._tags:
+            trioStr += f'{tag.trio_dumper()}\n'
+        return trioStr
 
 class Ontology(MutableSequence):
     def __init__(self, initvalue: List[Entity] = None) -> None:
-        self._data: List[Entity] = []
+        self._entities: List[Entity] = []
         if initvalue is not None:
             for data in initvalue:
                 self._add_entity(data)
@@ -139,22 +147,22 @@ class Ontology(MutableSequence):
 
     def __getitem__(self, index: Union[int, Ref, slice]):
         if isinstance(index, int):
-            return self._data[index]
+            return self._entities[index]
         elif isinstance(index, Ref):
             # issume one entity ref is unic
             idx, data = self._getEntityByRef(index)
             return data
         elif isinstance(index, slice):
-            return self.__class__(self._data[index])
+            return self.__class__(self._entities[index])
         else:
             raise TypeError('Function only accept Int, slice or Ref in index')
 
     def __setitem__(self, index: Union[int, Ref, slice], value: Entity) -> None:
         if isinstance(index, int):
-            self._data[index] = value
+            self._entities[index] = value
         elif isinstance(index, Ref):
             idx, data = self._getEntityByRef(index)
-            self._data[idx] = value
+            self._entities[idx] = value
         elif isinstance(index, slice):
             raise NotImplementedError(
                 "Update Ontology by slice is unsupported")
@@ -163,15 +171,15 @@ class Ontology(MutableSequence):
 
     def __delitem__(self, index: Union[int, Ref, slice]) -> None:
         if isinstance(index, int) or isinstance(index, slice):
-            del self._data[index]
+            del self._entities[index]
         elif isinstance(index, Ref):
             idx, data = self._getEntityByRef(index)
-            del self._data[idx]
+            del self._entities[idx]
         else:
             raise TypeError('Function only accept Int, slice or Ref in index')
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self._entities)
 
     def append(self, entity: Entity) -> None:
         self._add_entity(entity)
@@ -180,7 +188,7 @@ class Ontology(MutableSequence):
         if not isinstance(index, Ref):
             raise TypeError('Use only Ref in index')
 
-        for idx, data in enumerate(self._data):
+        for idx, data in enumerate(self._entities):
             if data.id == index:
                 return idx, data
         raise EntityNotFound(f'Entity {index.value} not found')
@@ -195,4 +203,12 @@ class Ontology(MutableSequence):
             raise DuplicateEntity(
                 f'Entity with ref {entity.id.value} already in ontology')
         except EntityNotFound:
-            self._data.append(entity)
+            self._entities.append(entity)
+
+    def trio_dumper(self) -> str:
+        trioStr= ''
+        for idx, entity in enumerate(self._entities):
+            if idx > 0:
+                trioStr += '---\n'
+            trioStr += f'{entity.trio_dumper()}'
+        return trioStr
