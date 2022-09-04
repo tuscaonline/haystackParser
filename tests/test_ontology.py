@@ -209,3 +209,4 @@ class Test_Tag:
         assert myTag.name == 'test'
         assert myTag() == 34.3
         assert myTag.kind == 34.3
+ 
