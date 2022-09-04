@@ -5,38 +5,35 @@ trio            : first_entity entity*
 first_entity    : (_small_stmt)+
 entity          : _ENTITY_MARK _NEWLINE (_small_stmt)+
 
-_small_stmt     : marker _NEWLINE
-                | tag _NEWLINE
-                | tag_multiline _DEDENT
-                
+_small_stmt     :  tag | marker | multiline
+
+multiline : _nametag _NEWLINE (" "+ TRIO_UNQUOTED_STR _NEWLINE)+
+
+tag : _nametag " "* (scalar | list | dict) " "*  _NEWLINE
+_nametag : NAME " "*  ":"
+ 
+        
 
 _ENTITY_MARK    :  "-"+
-marker          : NAME 
-                | NAME ":" _MARKER
 
-tag             : NAME ":" ( scalar | list | dict )
-tag_multiline   : NAME ":"  _NEWLINE [_INDENT _multiline_string+ ]
+
+marker : NAME " "* _NEWLINE
  
+
+_NEWLINE: ( /\r?\n/ )+
+
 
 
 COMMENT: /\/\/[^\n]*/
-//NAME: /[^\W\d]\w*/
-//safe_string: /[^\W\d]\w*/
-//string: /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i
-_multiline_string: /[^\n]+/ _NEWLINE
-// number: NUMBER
-// time: TIME
-// date: DATE
-// date_time: DATE_TIME
-_NEWLINE: ( /\r?\n[\t ]*/ | COMMENT )+
-
-%ignore /[\t \f]+/  // WS
-%ignore /\\[\t \f]*\r?\n/   // LINE_CONT
 %ignore COMMENT
+
 %declare _INDENT _DEDENT
 
-%import .zinctype.scalar 
-%import .zinctype.NAME
-%import .zinctype.MARKER -> _MARKER
+%import .zinctype.scalar    
+%import .zinctype.TRIO_UNQUOTED_STR        
+%import .zinctype.NAME    
+ 
+ 
+
 %import .zinctype.list
 %import .zinctype.dict

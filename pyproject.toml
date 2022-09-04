@@ -6,10 +6,10 @@ authors = ["tuscaonline <pierre.nerriere@engie.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-lark = "^1.1.2"
-Pint = "^0.19.2"
+lark = "^1"
+Pint = "^0"
 tzdata = "^2022.1"
-python-dateutil = "^2.8.2"
+python-dateutil = "^2"
 
 
 [tool.poetry.dev-dependencies]

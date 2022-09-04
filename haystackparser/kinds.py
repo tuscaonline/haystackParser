@@ -3,8 +3,12 @@
 from abc import ABC, abstractmethod
 from datetime import date, datetime, time
 from math import isinf, isnan
+from nis import match
 import re
+from typing import List, MutableSequence, Type, Union
+from zoneinfo import ZoneInfo
 from haystackparser.unitDb import Unit
+import dateutil.parser as dateutil
 
 
 from .exception import ZincFormatException
@@ -15,7 +19,7 @@ JSON_KIND = '_kind'
 
 
 class Kind(ABC):
-    """Classe de base des tag"""
+    """Kind base class"""
 
     def __init__(self) -> None:
         super().__init__()
@@ -25,16 +29,14 @@ class Kind(ABC):
     def value(self) -> any:
         raise NotImplementedError()
 
+    @property
     @abstractmethod
-    def __repr__(self, type, value) -> str:
-        return f'TYPE: {type} |VAL: {value}'
-
-    @abstractmethod
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         raise NotImplementedError()
 
+    @property
     @abstractmethod
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         raise NotImplementedError()
 
 
@@ -45,22 +47,23 @@ class Marker(Kind):
     def value(self) -> any:
         return "M"
 
-    def __repr__(self) -> str:
-        return super().__repr__('marker', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return "M"
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: "marker"
         }
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, self.__class__)
+
 
 class NA(Kind):
     """NA is a singleton for not available.
+from t import 
     It fills a similar role as the NA constant in the R language as
     a place holding for missing or invalid data values.
     In Haystack it is most often used in historized data to indicate
@@ -69,18 +72,18 @@ class NA(Kind):
     def value(self) -> any:
         return "NA"
 
-    def __repr__(self) -> str:
-        return super().__repr__('na', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return "NA"
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: "na"
         }
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, self.__class__)
 
 
 class Remove(Kind):
@@ -90,18 +93,18 @@ class Remove(Kind):
     def value(self) -> any:
         return "R"
 
-    def __repr__(self) -> str:
-        return super().__repr__('remove', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return "R"
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: "remove"
         }
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, self.__class__)
 
 
 class Bool(Kind):
@@ -119,18 +122,20 @@ class Bool(Kind):
     def value(self, value: bool) -> None:
         self._value = value
 
-    def __repr__(self) -> str:
-        return super().__repr__('Bool', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return 'T' if self.value else 'F'
 
     @property
-    def jsonValue(self) -> dict:
-        return{
+    def toJson(self) -> dict:
+        return {
             JSON_KIND: self.value
         }
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, bool):
+            return self.value == other
+        return super().__eq__(other)
 
 
 class Number(Kind):
@@ -138,6 +143,8 @@ class Number(Kind):
     Implementations should represent a number as a 64-bit IEEE 754 floating point and provide 52 bits of lossless integer representation."""
 
     def __init__(self,  value: float = None, unite: str = None) -> None:
+        if not isinstance(value, float):
+            raise TypeError('Use only float to create Numeber')
         self.value = value
         self.unit = unite
 
@@ -153,50 +160,54 @@ class Number(Kind):
 
     @property
     def unit(self) -> Unit:
-        if(self._unit):
+        if (self._unit):
             return self._unit
         else:
             return None
 
     @unit.setter
     def unit(self, unite: str) -> None:
-        if(unite):
+        if (unite):
             self._unit = Unit(unite)
         else:
             self._unit = None
 
-    def __repr__(self) -> str:
-        return super().__repr__('Number', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         if isnan(self.value):
             return 'NaN'
         if isinf(self.value):
             return "INF" if self.value > 0 else "-INF"
-        if(self.unit):
+        if (self.unit):
             return f'{self.value}{self.unit.symbol}'
         else:
             return f'{self.value}'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         value = self.value
         if isnan(self.value):
             value = 'NaN'
         if isinf(self.value):
             value = "INF" if self.value > 0 else "-INF"
         if self.unit:
-            return{
+            return {
                 JSON_KIND: "number",
                 "val": value,
                 "unit": self.unit.symbol
             }
         else:
-            return{
+            return {
                 JSON_KIND: "number",
                 "val": value,
             }
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, float):
+            return self.value == other
+        elif isinstance(other, int):
+            return self.value == float(other)
+        return super().__eq__(other)
 
 
 class Str(Kind):
@@ -226,22 +237,24 @@ Strings are also used for enumerated types. Enumerations define their range via 
     def value(self, value: str) -> None:
         self._value = value
 
-    def __repr__(self) -> str:
-        return super().__repr__('Str', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         escaped = self.value.translate(str.maketrans({
             "$":  r"\$",
         }))
-        return escaped
+        return f'"{escaped}"'
 
     @property
-    def jsonValue(self) -> dict:
-        return{
+    def toJson(self) -> dict:
+        return {
             JSON_KIND: 'str',
             "val": self.value
         }
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self._value == other
+        return super().__eq__(other)
 
 
 class HaystackUri(Kind):
@@ -268,23 +281,25 @@ Encodings:
     def value(self, value: str) -> None:
         self._value = value
 
-    def __repr__(self) -> str:
-        return super().__repr__('uri', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'`{self.value}`'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: 'uri',
             "val": self.value
         }
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self._value == other
+        return super().__eq__(other)
+
 
 class Ref(Kind):
-    """"""
+    """reference used to identify an entity instance"""
 
     def __init__(self,  value: str, displayname: str = None) -> None:
         self.value = value
@@ -309,17 +324,14 @@ class Ref(Kind):
     def displayname(self, displayname: str):
         self._displayname = displayname
 
-    def __repr__(self) -> str:
-        return super().__repr__('Ref', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         if self._displayname:
             return f'{self.value} "{self.displayname}"'
         return f'{self.value}'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         if self._displayname:
             return {
                 JSON_KIND: 'ref',
@@ -330,10 +342,12 @@ class Ref(Kind):
             JSON_KIND: 'ref',
             "val": self.value[1:]
         }
-    
+
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, Ref):
             return self.value == __o.value
+        elif isinstance(__o, str):
+            return self.value == __o
         return super().__eq__(__o)
 
 
@@ -341,7 +355,9 @@ class Symbol(Kind):
     """Symbols are the data type for def identifiers.
 
 Symbols follow the same naming conventions as refs - 
-only ASCII letters, digits, underbar, colon, dash, period, or tilde. Although only a subset of these punctuation characters are used today. Dashes are used for conjunct symbols and the colon is used for feature key symbols.
+only ASCII letters, digits, underbar, colon, dash, period, or tilde.
+Although only a subset of these punctuation characters are used today.
+Dashes are used for conjunct symbols and the colon is used for feature key symbols.
 
 Symbols are encoded using "^" as a prefix:"""
 
@@ -359,19 +375,21 @@ Symbols are encoded using "^" as a prefix:"""
             raise ZincFormatException(f'Ref symbol name {val} malformed')
         self._value = val
 
-    def __repr__(self) -> str:
-        return super().__repr__('Symbol', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'{self.value}'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: 'ref',
             "val": self.value[1:]
         }
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, str):
+            return self.value == __o
+        return super().__eq__(__o)
 
 
 class HaystackDate(Kind):
@@ -389,19 +407,21 @@ class HaystackDate(Kind):
     def value(self, date: date) -> None:
         self._value = date
 
-    def __repr__(self) -> str:
-        return super().__repr__('date', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'{self.value}'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: 'date',
             "val": self.value.isoformat()
         }
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self.value == dateutil.parse(other).date()
+        return super().__eq__(other)
 
 
 class HaystackTime(Kind):
@@ -419,34 +439,39 @@ class HaystackTime(Kind):
     def value(self, time: time) -> None:
         self._value = time
 
-    def __repr__(self) -> str:
-        return super().__repr__('time', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'{self.value}'
 
     @property
     def trioValue(self) -> str:
-        return f'{self.name}:{self.zincValue}'
+        return f'{self.name}:{self.toZinc}'
 
     @property
-    def jsonValue(self) -> dict:
-        return{
+    def toJson(self) -> dict:
+        return {
             JSON_KIND: 'time',
             "val": self.value.isoformat()
         }
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self.value == dateutil.parse(other).time()
+        return super().__eq__(other)
+
 
 class HaystackDateTime(Kind):
-    """DateTime is an ISO 8601 timestamp paired with a timezone name. Haystack requires all timestamps to include a timezone. Timezone names are standardized in the timezone database (city name from zoneinfo database). Implementations should support DateTime precision at least down to the millisecond."""
+    """DateTime is an ISO 8601 timestamp paired with a timezone name.
+    Haystack requires all timestamps to include a timezone.
+    Timezone names are standardized in the timezone database (city name from zoneinfo database).
+    Implementations should support DateTime precision at least down to the millisecond."""
 
-    def __init__(self,  value: time = None) -> None:
+    def __init__(self,  value: datetime = None, tz=ZoneInfo) -> None:
         self.value = value
         super().__init__()
 
     @property
-    def value(self) -> time:
+    def value(self) -> datetime:
         return self._value
 
     @value.setter
@@ -468,26 +493,23 @@ class HaystackDateTime(Kind):
                 return None
             return zone[0]
 
-    def __repr__(self) -> str:
-        return super().__repr__('datetime', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         if self.city:
             return f'{self.value.isoformat()} {self.city}'
         else:
             return f'{self.value.isoformat()}'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         if self.city:
-            return{
+            return {
                 JSON_KIND: 'dateTime',
                 "val": self.value.isoformat(),
                 "tz": f"{self.city}"
             }
         else:
-            return{
+            return {
                 JSON_KIND: 'dateTime',
                 "val": self.value.isoformat()
             }
@@ -542,15 +564,12 @@ class Coord(Kind):
             "lng": lng
         }
 
-    def __repr__(self) -> str:
-        return super().__repr__('coord', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'C({self.value["lat"]},{self.value["lng"]})'
 
     @property
-    def jsonValue(self) -> dict:
+    def toJson(self) -> dict:
         return {
             JSON_KIND: 'coord',
             "lat": self.value["lat"],
@@ -601,17 +620,104 @@ class XStr(Kind):
     def value(self, value: str) -> None:
         self._value['value'] = value
 
-    def __repr__(self) -> str:
-        return super().__repr__('coord', self.value)
-
     @property
-    def zincValue(self) -> str:
+    def toZinc(self) -> str:
         return f'{self.type}("{self.value}")'
 
     @property
-    def jsonValue(self) -> dict:
-        return{
+    def toJson(self) -> dict:
+        return {
             JSON_KIND: 'xstr',
             "type": self.type,
             "value": self.value
         }
+
+
+class HaystackList(MutableSequence, Kind):
+    def __init__(self, initValue: List[Kind] = None) -> None:
+        self._value: list[Kind] = []
+
+        if initValue != None:
+            for tag in initValue:
+                self.append(tag)
+
+    def insert(self, index: int, value: Kind) -> None:
+        raise NotImplementedError('Use append')
+
+    def __getitem__(self, index: Union[int, slice]) -> Kind:
+        if isinstance(index, int) or isinstance(index, slice):
+            return self._value[index]
+
+        else:
+            raise NotImplementedError()
+
+    def __setitem__(self, index: Union[int,  slice], value: Kind) -> None:
+        if isinstance(index, int):
+            self._value[index] = value
+
+        elif isinstance(index, slice):
+            raise NotImplementedError(
+                "Update Entity by slice is unsupported")
+        else:
+            raise TypeError('Function only accept Int, slice or str in index')
+
+    def __delitem__(self, index: Union[int,  slice]) -> None:
+        if isinstance(index, int) or isinstance(index, slice):
+            del self._value[index]
+
+        else:
+            raise TypeError('Function only accept Int, slice or Ref in index')
+
+    def __len__(self) -> int:
+        return len(self._value)
+
+    def append(self, value: Kind) -> None:
+        if not isinstance(value, Kind):
+            raise TypeError('Use only kind')
+        self._value.append(value)
+
+    @property
+    def value(self) -> List[Kind]:
+        return self._value 
+ 
+
+    @property
+    def toZinc(self) -> str:
+        _str = "["
+        for tag in self._value:
+            _str+= f'{tag.toZinc}, '
+        return _str[0:-2] + "]"
+
+    @property
+    def toJson(self) -> dict:
+        return self._value 
+
+
+
+class HaystackDict(dict[str, Kind], Kind):
+    def __setitem__(self, key: str, value: Kind) -> None:
+        _match = re.match(NAME_CHARS, key)
+        if not _match:
+            raise NameError(f'Name {key} malformed')
+        if not isinstance(value, Kind):
+            raise TypeError('Use only kind')
+        return super().__setitem__(key, value)
+    
+    @property
+    def value(self) -> str:
+        return self
+
+    @property
+    def toZinc(self) -> str:
+        _str = '{'
+        for name, kind in list(self.items()):
+            _str += f'{name}:{kind.toZinc}, '
+        return _str[0:-2] + '}'
+
+    @property
+    def toJson(self) -> dict:
+        _dict = {}
+        for key, kind in list(self.items()):
+          _dict[key] = kind.toJson
+        return _dict
+
