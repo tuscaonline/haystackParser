@@ -246,10 +246,8 @@ class Grid:
 
             self._row.append(_row)
 
- 
-
     def toZinc(self) -> str:
-        _str = 'ver:"3.0"\n'
+        _str = 'ver:"3.0"\n' # add meta
         for col in self._columns:
             _str += f'{col}, '
         _str = _str[0:-2] + "\n"
@@ -261,3 +259,7 @@ class Grid:
                     _str += ', '
             _str = _str[0:-2] + "\n"
         return _str
+
+    def __repr__(self) -> str:
+        return self.toZinc()
+        

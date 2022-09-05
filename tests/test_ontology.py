@@ -343,6 +343,7 @@ class Test_Grids:
         entity2 = Entity(Ref('@entity2', "Entity2  name"), [
             Tag('number2', Number(2.0)),
             Tag('str2', Str('String$ 2')),
+            Tag('marker2', Marker()),
             Tag('list3',
                 HaystackList([
                     Number(1.0),
@@ -364,7 +365,8 @@ class Test_Grids:
         myGrid = Grid(myOntology)
         assert myGrid.toZinc() == \
             """ver:"3.0"
-id, number1, str1, number2, str2, list3, dict3
+id, number1, str1, number2, str2, marker2, list3, dict3
 @entity1 "Entity1  name", 1.0, "String\$ 1"
-@entity2 "Entity2  name", , , 2.0, "String\$ 2", [1.0, "two", 3.0], {x:1.0, y:"4.0"}
+@entity2 "Entity2  name", , , 2.0, "String\$ 2", M, [1.0, "two", 3.0], {x:1.0, y:"4.0"}
 """
+        pass
