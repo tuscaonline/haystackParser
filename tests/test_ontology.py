@@ -1,9 +1,11 @@
 
+from datetime import date, datetime, time
 from decimal import Clamped
 from linecache import lazycache
 from re import M
+from zoneinfo import ZoneInfo
 from haystackparser.exception import DontChangeTagName, DuplicateEntity, DuplicateTag, EntityNotFound, RefNotFound, TagNotFound
-from haystackparser.kinds import NA, Marker, Number, Ref, Str
+from haystackparser.kinds import NA, Bool, Coord, HaystackDate, HaystackDateTime, HaystackDict, HaystackList, HaystackTime, HaystackUri, Marker, Number, Ref, Remove, Str, Symbol, XStr
 from haystackparser.ontology import Entity, Ontology, Tag
 import pytest
 
@@ -228,7 +230,6 @@ str1:"String 1"
 """
         assert trioStr == trioExpect
 
-
     def test_two_entity(self):
 
         entity1 = Entity(Ref('@entity1', "Entity  name"), [
@@ -251,5 +252,82 @@ str1:"String 1"
 id:@entity2 "Entity  name"
 number1:43.0
 str1:"String 2"
+"""
+        assert trioStr == trioExpect
+
+    def test_tree_entity(self):
+
+        entity1 = Entity(Ref('@entity1', "Entity1  name"), [
+            Tag('number1', Number(1.0)),
+            Tag('str1', Str('String$ 1'))
+        ]
+        )
+        entity2 = Entity(Ref('@entity2', "Entity2  name"), [
+            Tag('number2', Number(2.0)),
+            Tag('str2', Str('String$ 2'))
+        ]
+        )
+        entity3 = Entity(Ref('@entity3', "Entity3  name"), [
+            Tag('marker3', Marker()),
+            Tag('na3', NA()),
+            Tag('remove3', Remove()),
+            Tag('bool3', Bool(True)),
+            Tag('number3', Number(3.0)),
+            Tag('str3', Str('String$ 3')),
+            Tag('uri3', HaystackUri('http://project-haystack.org/')),
+            Tag('ref3', Ref("@entity1")),
+            Tag('symbol3', Symbol("^elec-meter")),
+            Tag('date3', HaystackDate(date(2020, 7, 17))),
+            Tag('time3', HaystackTime(time(14, 30, 0))),
+            Tag('datetime3', HaystackDateTime(
+                datetime(2020, 7, 17, 14, 30, 0, 930000, ZoneInfo('Pacific/Noumea')))),
+            Tag('gps3', Coord(-22.292697, 166.449519)),
+            Tag('xstr3', XStr('Color', 'red')),
+            Tag('list3',
+                HaystackList([
+                    Number(1.0),
+                    Str("two"),
+                    Number(3.0),
+                ])
+                ),
+            Tag('dict3',
+            HaystackDict(
+                {
+                    'x': Number(1.0),
+                    'y': Str("4.0")
+                }
+            )
+                )
+
+        ]
+        )
+        myOntology = Ontology([entity1, entity2, entity3])
+        trioStr = myOntology.trio_dumper()
+
+        trioExpect = """id:@entity1 "Entity1  name"
+number1:1.0
+str1:"String\$ 1"
+---
+id:@entity2 "Entity2  name"
+number2:2.0
+str2:"String\$ 2"
+---
+id:@entity3 "Entity3  name"
+marker3:M
+na3:NA
+remove3:R
+bool3:T
+number3:3.0
+str3:"String\$ 3"
+uri3:`http://project-haystack.org/`
+ref3:@entity1
+symbol3:^elec-meter
+date3:2020-07-17
+time3:14:30:00
+datetime3:2020-07-17T14:30:00.930000+11:00 Noumea
+gps3:C(-22.292697,166.449519)
+xstr3:Color("red")
+list3:[1.0, "two", 3.0]
+dict3:{x:1.0, y:"4.0"}
 """
         assert trioStr == trioExpect
