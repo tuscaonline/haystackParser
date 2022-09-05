@@ -6,7 +6,7 @@ from re import M
 from zoneinfo import ZoneInfo
 from haystackparser.exception import DontChangeTagName, DuplicateEntity, DuplicateTag, EntityNotFound, RefNotFound, TagNotFound
 from haystackparser.kinds import NA, Bool, Coord, HaystackDate, HaystackDateTime, HaystackDict, HaystackList, HaystackTime, HaystackUri, Marker, Number, Ref, Remove, Str, Symbol, XStr
-from haystackparser.ontology import Entity, Ontology, Tag
+from haystackparser.ontology import Entity, Grid, Ontology, Tag
 import pytest
 
 
@@ -291,12 +291,12 @@ str1:"String 2"
                 ])
                 ),
             Tag('dict3',
-            HaystackDict(
-                {
-                    'x': Number(1.0),
-                    'y': Str("4.0")
-                }
-            )
+                HaystackDict(
+                    {
+                        'x': Number(1.0),
+                        'y': Str("4.0")
+                    }
+                )
                 )
 
         ]
@@ -331,3 +331,40 @@ list3:[1.0, "two", 3.0]
 dict3:{x:1.0, y:"4.0"}
 """
         assert trioStr == trioExpect
+
+
+class Test_Grids:
+    def test_create(self):
+        entity1 = Entity(Ref('@entity1', "Entity1  name"), [
+            Tag('number1', Number(1.0)),
+            Tag('str1', Str('String$ 1'))
+        ]
+        )
+        entity2 = Entity(Ref('@entity2', "Entity2  name"), [
+            Tag('number2', Number(2.0)),
+            Tag('str2', Str('String$ 2')),
+            Tag('list3',
+                HaystackList([
+                    Number(1.0),
+                    Str("two"),
+                    Number(3.0),
+                ])
+                ),
+            Tag('dict3',
+                HaystackDict(
+                    {
+                        'x': Number(1.0),
+                        'y': Str("4.0")
+                    }
+                )
+                )
+        ]
+        )
+        myOntology = Ontology([entity1, entity2])
+        myGrid = Grid(myOntology)
+        assert myGrid.toZinc() == \
+            """ver:"3.0"
+id, number1, str1, number2, str2, list3, dict3
+@entity1 "Entity1  name", 1.0, "String\$ 1"
+@entity2 "Entity2  name", , , 2.0, "String\$ 2", [1.0, "two", 3.0], {x:1.0, y:"4.0"}
+"""

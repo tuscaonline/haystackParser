@@ -11,6 +11,7 @@ from haystackparser.exception import (DontChangeTagName, DuplicateEntity, Duplic
 from haystackparser.kinds import (NA, Bool, Coord, HaystackDate, HaystackDateTime, HaystackDict, HaystackList,
                                   HaystackTime, HaystackUri, Kind, Marker, Number, Ref,
                                   Remove, Str, Symbol, XStr)
+from haystackparser.util import populateListWithNone
 
 Kinds = Union[Marker, NA, Remove, Bool, Number, Str,
               HaystackUri, Ref, Symbol, HaystackDate,
@@ -135,6 +136,10 @@ class Entity(MutableSequence):
             trioStr += f'{tag.trio_dumper()}\n'
         return trioStr
 
+    @property
+    def tags(self):
+        return self._tags
+
 class Ontology(MutableSequence):
     def __init__(self, initvalue: List[Entity] = None) -> None:
         self._entities: List[Entity] = []
@@ -212,3 +217,47 @@ class Ontology(MutableSequence):
                 trioStr += '---\n'
             trioStr += f'{entity.trio_dumper()}'
         return trioStr
+
+    @property
+    def entities(self):
+        return self._entities
+
+class Grid:
+    def __init__(self, ontology: Ontology) -> None:
+        self._columns: List[str] = []
+        self._row:List[List[Kinds]] = []
+        self.updateGrid(ontology)
+
+
+    def _addColumn(self, columnName):
+        if not columnName in self._columns:
+            self._columns.append(columnName)
+
+    def updateGrid(self, ontology: Ontology ):
+        for entity in ontology.entities:
+            self._addColumn('id')
+            _row:List[Kinds] = []
+            _row =  populateListWithNone(_row, len(self._columns))
+            _row[self._columns.index('id')] =  entity.id
+            for tag in entity.tags:
+                self._addColumn(tag.name)
+                _row =  populateListWithNone(_row, len(self._columns))
+                _row[self._columns.index(tag.name)] = tag.kind
+
+            self._row.append(_row)
+
+ 
+
+    def toZinc(self) -> str:
+        _str = 'ver:"3.0"\n'
+        for col in self._columns:
+            _str += f'{col}, '
+        _str = _str[0:-2] + "\n"
+        for row in self._row:
+            for kind in row:
+                if isinstance(kind, Kind):
+                    _str += f'{kind.toZinc}, '
+                else:
+                    _str += ', '
+            _str = _str[0:-2] + "\n"
+        return _str
